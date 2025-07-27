@@ -1,0 +1,524 @@
+<apex:page controller="OpportunityWizardController" 
+           showHeader="true" 
+           sidebar="true" 
+           standardStylesheets="true"
+           title="Opportunity Creation Wizard">
+    
+    <apex:slds />
+    
+    <style>
+        .wizard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 0 10px;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .step-active {
+            background-color: #0070d2;
+            color: white;
+        }
+        
+        .step-completed {
+            background-color: #04844b;
+            color: white;
+        }
+        
+        .step-pending {
+            background-color: #dddbda;
+            color: #706e6b;
+        }
+        
+        .step-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .form-section {
+            margin-bottom: 25px;
+        }
+        
+        .form-section h3 {
+            color: #16325c;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #dddbda;
+            padding-bottom: 8px;
+        }
+        
+        .search-box {
+            margin-bottom: 15px;
+        }
+        
+        .search-results {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #dddbda;
+            border-radius: 4px;
+        }
+        
+        .search-item {
+            padding: 10px;
+            border-bottom: 1px solid #f3f2f2;
+            cursor: pointer;
+        }
+        
+        .search-item:hover {
+            background-color: #f3f2f2;
+        }
+        
+        .selected-item {
+            background-color: #eef4ff;
+            border: 1px solid #0070d2;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .product-card {
+            border: 1px solid #dddbda;
+            border-radius: 6px;
+            padding: 15px;
+            background: white;
+        }
+        
+        .product-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .selected-products {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .product-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #dddbda;
+        }
+        
+        .product-row:last-child {
+            border-bottom: none;
+        }
+        
+        .product-header {
+            font-weight: bold;
+            background-color: #f3f2f2;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background-color: #0070d2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #005fb2;
+        }
+        
+        .btn-secondary {
+            background-color: #706e6b;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a5a5a;
+        }
+        
+        .btn-success {
+            background-color: #04844b;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #036b3d;
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .message-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .message-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f2f2;
+        }
+        
+        .summary-item:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        /* Custom placeholder styling */
+        .search-input {
+            width: 300px;
+            padding: 8px;
+            border: 1px solid #dddbda;
+            border-radius: 4px;
+        }
+        
+        .search-input::placeholder {
+            color: #706e6b;
+            font-style: italic;
+        }
+        
+        .search-item-link {
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .search-item-link:hover {
+            text-decoration: none;
+        }
+    </style>
+    
+    <div class="wizard-container">
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step">
+                <div class="step-number {!IF(currentStep >= 1, IF(currentStep == 1, 'step-active', 'step-completed'), 'step-pending')}">
+                    {!IF(currentStep > 1, '✓', '1')}
+                </div>
+                <span>Basic Information</span>
+            </div>
+            <div class="step">
+                <div class="step-number {!IF(currentStep >= 2, IF(currentStep == 2, 'step-active', 'step-completed'), 'step-pending')}">
+                    {!IF(currentStep > 2, '✓', '2')}
+                </div>
+                <span>Products</span>
+            </div>
+            <div class="step">
+                <div class="step-number {!IF(currentStep >= 3, 'step-active', 'step-pending')}">
+                    3
+                </div>
+                <span>Confirmation</span>
+            </div>
+        </div>
+        
+        <!-- Messages -->
+        <apex:outputPanel rendered="{!NOT(ISNULL(message))}">
+            <div class="message message-{!messageType}">
+                {!message}
+            </div>
+        </apex:outputPanel>
+        
+        <!-- Step 1: Basic Information -->
+        <apex:outputPanel rendered="{!isStep1}">
+            <div class="step-content">
+                <h2>Step 1: Basic Opportunity Information</h2>
+                
+                <apex:form id="step1Form">
+                    <div class="form-section">
+                        <h3>Opportunity Details</h3>
+                        <apex:pageBlock>
+                            <apex:pageBlockSection columns="2">
+                                <apex:inputField value="{!newOpportunity.Name}" required="true" label="Opportunity Name"/>
+                                <apex:inputField value="{!newOpportunity.CloseDate}" required="true" label="Close Date"/>
+                                <apex:inputField value="{!newOpportunity.StageName}" label="Stage"/>
+                                <apex:inputField value="{!newOpportunity.Type}" label="Type"/>
+                                <apex:inputField value="{!newOpportunity.Probability}" label="Probability (%)"/>
+                                <apex:inputField value="{!newOpportunity.Amount}" label="Amount"/>
+                            </apex:pageBlockSection>
+                        </apex:pageBlock>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Account Selection</h3>
+                        <div class="search-box">
+                            <apex:inputText value="{!accountSearchTerm}" styleClass="search-input" title="Search for an account..."/>
+                            <apex:commandButton value="Search" action="{!searchAccounts}" reRender="step1Form" styleClass="btn btn-secondary" style="margin-left: 10px;"/>
+                        </div>
+                        
+                        <apex:outputPanel rendered="{!NOT(ISNULL(searchAccounts))}">
+                            <div class="search-results">
+                                <apex:repeat value="{!searchAccounts}" var="account">
+                                    <apex:commandLink action="{!selectAccountById}" 
+                                                     reRender="step1Form" 
+                                                     styleClass="search-item-link">
+                                        <apex:param name="selectedAccountId" value="{!account.Id}" assignTo="{!selectedAccountId}"/>
+                                        <div class="search-item">
+                                            <strong>{!account.Name}</strong><br/>
+                                            {!account.BillingCity}, {!account.BillingState} | {!account.Phone}
+                                        </div>
+                                    </apex:commandLink>
+                                </apex:repeat>
+                            </div>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel rendered="{!NOT(ISNULL(selectedAccount))}">
+                            <div class="selected-item">
+                                <strong>Selected Account:</strong> {!selectedAccount.Name}<br/>
+                                {!selectedAccount.BillingCity}, {!selectedAccount.BillingState} | {!selectedAccount.Phone}
+                            </div>
+                        </apex:outputPanel>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Contact Selection (Optional)</h3>
+                        <div class="search-box">
+                            <apex:inputText value="{!contactSearchTerm}" styleClass="search-input" title="Search for a contact..."/>
+                            <apex:commandButton value="Search" action="{!searchContacts}" reRender="step1Form" styleClass="btn btn-secondary" style="margin-left: 10px;"/>
+                        </div>
+                        
+                        <apex:outputPanel rendered="{!NOT(ISNULL(searchContacts))}">
+                            <div class="search-results">
+                                <apex:repeat value="{!searchContacts}" var="contact">
+                                    <apex:commandLink action="{!selectContactById}" 
+                                                     reRender="step1Form" 
+                                                     styleClass="search-item-link">
+                                        <apex:param name="selectedContactId" value="{!contact.Id}" assignTo="{!selectedContactId}"/>
+                                        <div class="search-item">
+                                            <strong>{!contact.Name}</strong><br/>
+                                            {!contact.Title} at {!contact.Account.Name} | {!contact.Email}
+                                        </div>
+                                    </apex:commandLink>
+                                </apex:repeat>
+                            </div>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel rendered="{!NOT(ISNULL(selectedContact))}">
+                            <div class="selected-item">
+                                <strong>Selected Contact:</strong> {!selectedContact.Name}<br/>
+                                {!selectedContact.Title} | {!selectedContact.Email}
+                            </div>
+                        </apex:outputPanel>
+                    </div>
+                    
+                    <div class="button-group">
+                        <div></div>
+                        <apex:commandButton value="Next Step" action="{!nextStep}" styleClass="btn btn-primary"/>
+                    </div>
+                </apex:form>
+            </div>
+        </apex:outputPanel>
+        
+        <!-- Step 2: Products -->
+        <apex:outputPanel rendered="{!isStep2}">
+            <div class="step-content">
+                <h2>Step 2: Add Products</h2>
+                
+                <apex:form id="step2Form">
+                    <div class="form-section">
+                        <h3>Search Products</h3>
+                        <div class="search-box">
+                            <apex:inputText value="{!productSearchTerm}" styleClass="search-input" title="Search for products..."/>
+                        </div>
+                        
+                        <div class="product-grid">
+                            <apex:repeat value="{!filteredProducts}" var="product">
+                                <div class="product-card">
+                                    <h4>{!product.Product2.Name}</h4>
+                                    <p>{!product.Product2.Description}</p>
+                                    <p><strong>Price:</strong> ${!product.UnitPrice}</p>
+                                    <p><strong>Code:</strong> {!product.Product2.ProductCode}</p>
+                                    <apex:commandButton value="Add to Opportunity" 
+                                                       action="{!addProduct}" 
+                                                       reRender="step2Form" 
+                                                       styleClass="btn btn-primary"
+                                                       style="width: 100%; margin-top: 10px;">
+                                        <apex:param name="productId" value="{!product.Id}" assignTo="{!productId}"/>
+                                    </apex:commandButton>
+                                </div>
+                            </apex:repeat>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Selected Products</h3>
+                        <apex:outputPanel rendered="{!NOT(ISNULL(selectedProducts)) && selectedProducts.size > 0}">
+                            <div class="selected-products">
+                                <div class="product-row product-header">
+                                    <div>Product</div>
+                                    <div>Quantity</div>
+                                    <div>Unit Price</div>
+                                    <div>Total</div>
+                                    <div>Action</div>
+                                </div>
+                                
+                                <apex:repeat value="{!selectedProducts}" var="product">
+                                    <div class="product-row">
+                                        <div>{!product.productName}</div>
+                                        <div>
+                                            <apex:inputText value="{!product.quantity}" 
+                                                           style="width: 60px; text-align: center;"
+                                                           onchange="updateQuantities()"/>
+                                        </div>
+                                        <div>${!product.unitPrice}</div>
+                                        <div>${!product.totalPrice}</div>
+                                        <div>
+                                            <apex:commandButton value="Remove" 
+                                                               action="{!removeProduct}" 
+                                                               reRender="step2Form" 
+                                                               styleClass="btn btn-secondary"
+                                                               style="padding: 5px 10px; font-size: 12px;">
+                                                <apex:param name="productId" value="{!product.pricebookEntryId}" assignTo="{!productId}"/>
+                                            </apex:commandButton>
+                                        </div>
+                                    </div>
+                                </apex:repeat>
+                                
+                                <div class="product-row" style="font-weight: bold; border-top: 2px solid #dddbda; margin-top: 10px;">
+                                    <div>Total Amount:</div>
+                                    <div></div>
+                                    <div></div>
+                                    <div>${!totalAmount}</div>
+                                    <div></div>
+                                </div>
+                            </div>
+                        </apex:outputPanel>
+                        
+                        <apex:outputPanel rendered="{!ISNULL(selectedProducts) || selectedProducts.size == 0}">
+                            <p style="color: #706e6b; font-style: italic;">No products selected yet. Search and add products above.</p>
+                        </apex:outputPanel>
+                    </div>
+                    
+                    <div class="button-group">
+                        <apex:commandButton value="Previous Step" action="{!previousStep}" styleClass="btn btn-secondary"/>
+                        <apex:commandButton value="Next Step" action="{!nextStep}" styleClass="btn btn-primary"/>
+                    </div>
+                </apex:form>
+            </div>
+        </apex:outputPanel>
+        
+        <!-- Step 3: Confirmation -->
+        <apex:outputPanel rendered="{!isStep3}">
+            <div class="step-content">
+                <h2>Step 3: Confirm Opportunity Details</h2>
+                
+                <apex:form id="step3Form">
+                    <div class="form-section">
+                        <h3>Opportunity Summary</h3>
+                        <div class="summary-item">
+                            <span>Opportunity Name:</span>
+                            <span>{!newOpportunity.Name}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Account:</span>
+                            <span>{!selectedAccount.Name}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Close Date:</span>
+                            <span>{!newOpportunity.CloseDate}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Stage:</span>
+                            <span>{!newOpportunity.StageName}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Type:</span>
+                            <span>{!newOpportunity.Type}</span>
+                        </div>
+                        <apex:outputPanel rendered="{!NOT(ISNULL(selectedContact))}">
+                            <div class="summary-item">
+                                <span>Primary Contact:</span>
+                                <span>{!selectedContact.Name}</span>
+                            </div>
+                        </apex:outputPanel>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Products Summary</h3>
+                        <apex:repeat value="{!selectedProducts}" var="product">
+                            <div class="summary-item">
+                                <span>{!product.productName} (Qty: {!product.quantity})</span>
+                                <span>${!product.totalPrice}</span>
+                            </div>
+                        </apex:repeat>
+                        <div class="summary-item">
+                            <span>Total Opportunity Amount:</span>
+                            <span>${!totalAmount}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <apex:commandButton value="Previous Step" action="{!previousStep}" styleClass="btn btn-secondary"/>
+                        <apex:commandButton value="Create Opportunity" action="{!saveOpportunity}" styleClass="btn btn-success"/>
+                    </div>
+                </apex:form>
+            </div>
+        </apex:outputPanel>
+    </div>
+    
+    <script>
+        function updateQuantities() {
+            // This will be handled by the controller's updateProductQuantities method
+            // when the form is submitted
+        }
+    </script>
+</apex:page> 

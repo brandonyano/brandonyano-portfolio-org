@@ -42,7 +42,7 @@ Follow the guidelines below:
 ## Visualforce Pages
 - Use standard controllers and standard list controllers by default. Only use custom controllers if the request necessitates it.
 - Use standard salesforce components and styling, unless the request necessitates otherwise.
-- Always output the url the Visualforce page can be viewed at after creating the page.
+- Always output the full url (including the default org's base URL) that the Visualforce page can be viewed at after creating the page.
 
 ## Metadata Generation
 
@@ -57,4 +57,8 @@ Follow the guidelines below:
 - Always prefer existing object and fields for your implementation. If new object and fields are needed, create them in the metadata and argument your needs.
 - Include comments explaining key design decisions. Don't explain the obvious.
 - Create a Lightning Web Component only when requested, otherwise refer to the standard Salesforce UI components
+
+## Salesforce DX MCP
+- Always check the Salesforce DX MCP server tools to see if any of them can be useful in achieving each task.
+- Never deploy changes to the org without first asking to do so.
         
