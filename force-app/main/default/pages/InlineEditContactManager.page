@@ -1,0 +1,161 @@
+<apex:page controller="InlineEditContactManagerController" 
+           showHeader="true" 
+           sidebar="true" 
+           standardStylesheets="true"
+           title="Inline Edit Contact Manager">
+    
+    <apex:form id="contactForm">
+        <apex:pageBlock title="Contact Manager" mode="edit">
+            
+            <!-- Search Section -->
+            <apex:pageBlockSection title="Search" columns="2" collapsible="true">
+                <apex:inputText value="{!searchTerm}" 
+                               style="width: 200px;"
+                               title="Search by Name or Email"/>
+                <apex:commandButton value="Search" 
+                                  action="{!searchContacts}" 
+                                  reRender="contactTable"
+                                  styleClass="slds-button slds-button--brand"/>
+            </apex:pageBlockSection>
+            
+            <!-- Contact List Section -->
+            <apex:pageBlockSection title="Contacts" columns="1">
+                <apex:outputPanel id="contactTable">
+                    <apex:pageBlockTable value="{!contacts}" var="contact" 
+                                       styleClass="slds-table slds-table--bordered slds-table--striped">
+                        
+                        <!-- Edit Mode Toggle -->
+                        <apex:column headerValue="Actions" width="100px">
+                            <apex:commandLink value="{!IF(contact.isEditing, 'Save', 'Edit')}" 
+                                            action="{!toggleEditMode}" 
+                                            reRender="contactTable">
+                                <apex:param name="contactId" value="{!contact.record.Id}" assignTo="{!selectedContactId}"/>
+                            </apex:commandLink>
+                            <apex:outputText value=" | " rendered="{!contact.isEditing}"/>
+                            <apex:commandLink value="Cancel" 
+                                            action="{!cancelEdit}" 
+                                            reRender="contactTable"
+                                            rendered="{!contact.isEditing}">
+                                <apex:param name="contactId" value="{!contact.record.Id}" assignTo="{!selectedContactId}"/>
+                            </apex:commandLink>
+                        </apex:column>
+                        
+                        <!-- First Name -->
+                        <apex:column headerValue="First Name" width="120px">
+                            <apex:outputText value="{!contact.record.FirstName}" rendered="{!NOT contact.isEditing}"/>
+                            <apex:inputText value="{!contact.record.FirstName}" 
+                                          style="width: 100px;" 
+                                          rendered="{!contact.isEditing}"/>
+                        </apex:column>
+                        
+                        <!-- Last Name -->
+                        <apex:column headerValue="Last Name" width="120px">
+                            <apex:outputText value="{!contact.record.LastName}" rendered="{!NOT contact.isEditing}"/>
+                            <apex:inputText value="{!contact.record.LastName}" 
+                                          style="width: 100px;" 
+                                          rendered="{!contact.isEditing}"/>
+                        </apex:column>
+                        
+                        <!-- Email -->
+                        <apex:column headerValue="Email" width="200px">
+                            <apex:outputText value="{!contact.record.Email}" rendered="{!NOT contact.isEditing}"/>
+                            <apex:inputText value="{!contact.record.Email}" 
+                                          style="width: 180px;" 
+                                          rendered="{!contact.isEditing}"/>
+                        </apex:column>
+                        
+                        <!-- Phone -->
+                        <apex:column headerValue="Phone" width="120px">
+                            <apex:outputText value="{!contact.record.Phone}" rendered="{!NOT contact.isEditing}"/>
+                            <apex:inputText value="{!contact.record.Phone}" 
+                                          style="width: 100px;" 
+                                          rendered="{!contact.isEditing}"/>
+                        </apex:column>
+                        
+                        <!-- Title -->
+                        <apex:column headerValue="Title" width="150px">
+                            <apex:outputText value="{!contact.record.Title}" rendered="{!NOT contact.isEditing}"/>
+                            <apex:inputText value="{!contact.record.Title}" 
+                                          style="width: 130px;" 
+                                          rendered="{!contact.isEditing}"/>
+                        </apex:column>
+                        
+                        <!-- Department -->
+                        <apex:column headerValue="Department" width="120px">
+                            <apex:outputText value="{!contact.record.Department}" rendered="{!NOT contact.isEditing}"/>
+                            <apex:inputText value="{!contact.record.Department}" 
+                                          style="width: 100px;" 
+                                          rendered="{!contact.isEditing}"/>
+                        </apex:column>
+                        
+                        <!-- Account -->
+                        <apex:column headerValue="Account" width="150px">
+                            <apex:outputText value="{!contact.record.Account.Name}" rendered="{!NOT contact.isEditing}"/>
+                            <apex:inputField value="{!contact.record.AccountId}" 
+                                           style="width: 130px;" 
+                                           rendered="{!contact.isEditing}"/>
+                        </apex:column>
+                        
+                    </apex:pageBlockTable>
+                    
+                    <!-- Pagination -->
+                    <apex:panelGrid columns="3" styleClass="slds-grid slds-grid--align-center slds-m-top--medium">
+                        <apex:commandButton value="Previous" 
+                                          action="{!previous}" 
+                                          reRender="contactTable"
+                                          disabled="{!isFirstPage}"
+                                          styleClass="slds-button slds-button--neutral"/>
+                        <apex:outputText value="Page {!currentPage} of {!totalPages}" 
+                                       styleClass="slds-text-body--regular slds-p-horizontal--medium"/>
+                        <apex:commandButton value="Next" 
+                                          action="{!next}" 
+                                          reRender="contactTable"
+                                          disabled="{!isLastPage}"
+                                          styleClass="slds-button slds-button--neutral"/>
+                    </apex:panelGrid>
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+            
+            <!-- Messages Section -->
+            <apex:pageMessages id="messages"/>
+            
+        </apex:pageBlock>
+    </apex:form>
+    
+    <style>
+        .slds-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .slds-table th, .slds-table td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #d8dde6;
+        }
+        .slds-table th {
+            background-color: #f3f2f2;
+            font-weight: bold;
+        }
+        .slds-button {
+            padding: 6px 12px;
+            border: 1px solid #d8dde6;
+            border-radius: 4px;
+            background-color: #ffffff;
+            color: #0070d2;
+            cursor: pointer;
+        }
+        .slds-button--brand {
+            background-color: #0070d2;
+            color: #ffffff;
+        }
+        .slds-button--neutral {
+            background-color: #ffffff;
+            color: #0070d2;
+        }
+        .slds-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+    
+</apex:page> 

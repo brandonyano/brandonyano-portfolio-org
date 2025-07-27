@@ -1,0 +1,21 @@
+<apex:page standardController="Account" recordSetVar="accounts" showHeader="true" sidebar="true">
+    <apex:pageBlock title="Account Directory">
+        <apex:pageBlockTable value="{!accounts}" var="account">
+            <apex:column headerValue="Account Name">
+                <apex:outputLink value="/{!account.Id}">
+                    {!account.Name}
+                </apex:outputLink>
+            </apex:column>
+            <apex:column headerValue="Type" value="{!account.Type}"/>
+            <apex:column headerValue="Industry" value="{!account.Industry}"/>
+            <apex:column headerValue="Phone" value="{!account.Phone}"/>
+            <apex:column headerValue="Website">
+                <apex:outputLink value="{!account.Website}" target="_blank" rendered="{!NOT(ISNULL(account.Website))}">
+                    {!account.Website}
+                </apex:outputLink>
+            </apex:column>
+            <apex:column headerValue="Billing City" value="{!account.BillingCity}"/>
+            <apex:column headerValue="Billing State" value="{!account.BillingState}"/>
+        </apex:pageBlockTable>
+    </apex:pageBlock>
+</apex:page> 

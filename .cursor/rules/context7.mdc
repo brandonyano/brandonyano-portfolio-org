@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+
+- Always use the context7 mcp server to look up the latest documentation before writing any code.
