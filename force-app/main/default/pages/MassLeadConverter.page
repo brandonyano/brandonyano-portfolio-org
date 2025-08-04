@@ -1,0 +1,257 @@
+<apex:page standardController="Lead" recordSetVar="leads" extensions="MassLeadConverterController" 
+           sidebar="false" showHeader="true" tabStyle="Lead">
+    
+    <apex:slds />
+    
+    <style>
+        .leadGrid {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .leadGrid th, .leadGrid td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .leadGrid th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .conversionSettings {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .actionButtons {
+            margin: 10px 0;
+        }
+        .pageNavigation {
+            text-align: center;
+            margin: 15px 0;
+            white-space: nowrap !important;
+        }
+        
+        /* Force all pagination buttons to stay on same line */
+        .pageNavigation .btn,
+        .pageNavigation input[type="button"],
+        .pageNavigation .slds-button {
+            display: inline-block !important;
+            margin-right: 8px !important;
+            vertical-align: middle !important;
+            float: none !important;
+        }
+        
+        /* Specific styling for apex:pageBlockButtons */
+        .pbSubsection .pageNavigation .pbButton {
+            display: inline-block !important;
+            margin-right: 8px !important;
+            float: none !important;
+        }
+    </style>
+    
+    <apex:form id="massLeadForm">
+        <apex:pageMessages />
+        
+        <!-- Action Functions for JavaScript Bridge -->
+        <apex:actionFunction name="convertLeadsJS" action="{!convertSelectedLeads}" reRender="mainBlock" 
+                           status="convertingStatus" oncomplete="resetConvertButton();"/>
+        
+        <script>
+        function convertWithConfirmation() {
+            if (confirm('Are you sure you want to convert the selected leads?')) {
+                // Disable button during processing
+                document.getElementById('convertButton').disabled = true;
+                document.getElementById('convertButton').innerHTML = 'Converting...';
+                convertLeadsJS();
+            }
+        }
+        
+        // Re-enable button after processing (called after reRender)
+        function resetConvertButton() {
+            setTimeout(function() {
+                var button = document.getElementById('convertButton');
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = 'CONVERT SELECTED LEADS';
+                }
+            }, 100);
+        }
+        </script>
+        
+        <!-- Page Header -->
+        <apex:pageBlock title="Mass Lead Converter" id="mainBlock">
+            
+            <!-- Action Buttons Section - MOVED TO TOP -->
+            <div class="slds-card slds-m-bottom_medium">
+                <div class="slds-card__header">
+                    <h3 class="slds-card__header-title slds-text-heading_small">Lead Actions</h3>
+                </div>
+                <div class="slds-card__body slds-card__body_inner">
+                    <div style="text-align: center; padding: 10px; white-space: nowrap;">
+                        <apex:commandButton value="Select All on Page" action="{!selectAll}" 
+                                          reRender="mainBlock" 
+                                          styleClass="slds-button slds-button_neutral"
+                                          style="display: inline-block; margin-right: 8px; vertical-align: top;"/>
+                        <apex:commandButton value="Deselect All" action="{!deselectAll}" 
+                                          reRender="mainBlock"
+                                          styleClass="slds-button slds-button_neutral"
+                                          style="display: inline-block; margin-right: 15px; vertical-align: top;"/>
+                        <button type="button" 
+                                class="slds-button slds-button_brand"
+                                onclick="convertWithConfirmation()" 
+                                id="convertButton"
+                                style="display: inline-block; vertical-align: top;">
+                            CONVERT SELECTED LEADS
+                        </button>
+                        
+                        <!-- Loading Status -->
+                        <apex:actionStatus id="convertingStatus">
+                            <apex:facet name="start">
+                                <div style="margin-top: 15px; color: #0176d3; font-weight: bold;">
+                                    <img src="/img/loading.gif" style="vertical-align: middle; margin-right: 5px;"/>
+                                    Converting leads, please wait...
+                                </div>
+                            </apex:facet>
+                        </apex:actionStatus>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Conversion Settings Section -->
+            <apex:pageBlockSection title="Conversion Settings" columns="2" 
+                                   collapsible="true" showHeader="true">
+                <apex:pageBlockSectionItem>
+                    <apex:outputLabel value="Create Opportunity:" for="createOpp"/>
+                    <apex:inputCheckbox id="createOpp" value="{!createOpportunity}"/>
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem>
+                    <apex:outputLabel value="Send Email to Owner:" for="sendEmail"/>
+                    <apex:inputCheckbox id="sendEmail" value="{!sendEmailToOwner}"/>
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem>
+                    <apex:outputText value="Note: Lead conversion will create Account and Contact records based on Lead data. Opportunities will be created if selected above."/>
+                </apex:pageBlockSectionItem>
+                
+                <apex:pageBlockSectionItem>
+                    <apex:outputText value="Only unconverted leads are shown below. Already converted leads are automatically filtered out." style="font-style: italic; color: #666;"/>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            
+            <!-- Selection Info -->
+            <apex:outputPanel id="selectedInfo">
+                <div style="margin: 10px 0; font-weight: bold;">
+                    Selected: {!selectedCount} lead(s) | 
+                    Page {!pageNumber} of {!totalPages} | 
+                    Total Records: {!resultSize}
+                </div>
+            </apex:outputPanel>
+            
+            <!-- Lead Grid -->
+            <apex:pageBlockSection title="Leads ({!resultSize} records)" columns="1" 
+                                 collapsible="false" showHeader="true">
+                <apex:pageBlockTable value="{!leadWrappers}" var="wrapper" id="leadTable" 
+                                   styleClass="slds-table slds-table_cell-buffer slds-table_bordered">
+                    
+                    <!-- Selection Checkbox Column -->
+                    <apex:column headerValue="Select" width="50px">
+                        <apex:inputCheckbox value="{!wrapper.selected}">
+                            <apex:actionSupport event="onchange" reRender="selectedInfo"/>
+                        </apex:inputCheckbox>
+                    </apex:column>
+                    
+                    <!-- Lead Name Column -->
+                    <apex:column headerValue="Name" width="150px">
+                        <apex:outputLink value="/{!wrapper.leadRecord.Id}" target="_blank">
+                            {!wrapper.leadRecord.FirstName} {!wrapper.leadRecord.LastName}
+                        </apex:outputLink>
+                    </apex:column>
+                    
+                    <!-- Company Column -->
+                    <apex:column headerValue="Company" value="{!wrapper.leadRecord.Company}" width="150px"/>
+                    
+                    <!-- Email Column -->
+                    <apex:column headerValue="Email" value="{!wrapper.leadRecord.Email}" width="200px"/>
+                    
+                    <!-- Phone Column -->
+                    <apex:column headerValue="Phone" value="{!wrapper.leadRecord.Phone}" width="120px"/>
+                    
+                    <!-- Status Column -->
+                    <apex:column headerValue="Status" value="{!wrapper.leadRecord.Status}" width="100px"/>
+                    
+                    <!-- Lead Source Column -->
+                    <apex:column headerValue="Lead Source" value="{!wrapper.leadRecord.LeadSource}" width="120px"/>
+                    
+                    <!-- Owner Column -->
+                    <apex:column headerValue="Owner" value="{!wrapper.leadRecord.Owner.Name}" width="120px"/>
+                    
+                    <!-- Created Date Column -->
+                    <apex:column headerValue="Created Date" width="100px">
+                        <apex:outputText value="{0,date,MM/dd/yyyy}">
+                            <apex:param value="{!wrapper.leadRecord.CreatedDate}"/>
+                        </apex:outputText>
+                    </apex:column>
+                    
+                    <!-- Individual Action Column using apex:param -->
+                    <apex:column headerValue="Actions" width="80px">
+                        <apex:commandLink value="Convert" 
+                                        onclick="if(!confirm('Convert this lead?')) return false;"
+                                        styleClass="slds-button slds-button_outline-brand slds-button_x-small">
+                            <apex:param name="leadId" value="{!wrapper.leadRecord.Id}" assignTo="{!$CurrentPage.parameters.selectedLeadId}"/>
+                            <apex:actionSupport event="onclick" action="{!convertSelectedLeads}" 
+                                              reRender="mainBlock">
+                                <!-- Using apex:param trick to select individual lead -->
+                                <apex:param name="singleConvert" value="true"/>
+                                <apex:param name="leadId" value="{!wrapper.leadRecord.Id}"/>
+                            </apex:actionSupport>
+                        </apex:commandLink>
+                    </apex:column>
+                    
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>
+            
+            <!-- Pagination Controls -->
+            <apex:pageBlockButtons location="bottom">
+                <div class="pageNavigation">
+                    <apex:commandButton value="<< First" action="{!first}" 
+                                      disabled="{!NOT(hasPrevious)}" reRender="mainBlock"/>
+                    <apex:commandButton value="< Previous" action="{!previous}" 
+                                      disabled="{!NOT(hasPrevious)}" reRender="mainBlock"/>
+                    <apex:outputText value=" Page {!pageNumber} of {!totalPages} " 
+                                   style="display: inline-block; margin: 0 15px; vertical-align: middle; line-height: 2rem;"/>
+                    <apex:commandButton value="Next >" action="{!next}" 
+                                      disabled="{!NOT(hasNext)}" reRender="mainBlock"/>
+                    <apex:commandButton value="Last >>" action="{!last}" 
+                                      disabled="{!NOT(hasNext)}" reRender="mainBlock"/>
+                </div>
+            </apex:pageBlockButtons>
+            
+        </apex:pageBlock>
+    </apex:form>
+    
+    <!-- Additional JavaScript for enhanced UX -->
+    <script>
+        // Add any custom JavaScript if needed
+        function confirmBulkConversion(selectedCount) {
+            if (selectedCount === 0) {
+                alert('Please select at least one lead to convert.');
+                return false;
+            }
+            return confirm('Are you sure you want to convert ' + selectedCount + ' lead(s)?');
+        }
+        
+        // Auto-refresh selected count when checkboxes change
+        function updateSelectedCount() {
+            var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            var count = 0;
+            checkboxes.forEach(function(cb) {
+                if (cb.checked) count++;
+            });
+            // Update display if needed
+        }
+    </script>
+    
+</apex:page>

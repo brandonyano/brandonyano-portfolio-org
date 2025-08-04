@@ -1,5 +1,4 @@
 ---
-alwaysApply: false
+alwaysApply: true
 ---
-
 - Always check the Salesforce DX MCP server tools to see if they can be useful in achieving each task.
