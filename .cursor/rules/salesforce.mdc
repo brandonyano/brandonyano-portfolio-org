@@ -40,8 +40,8 @@ Follow the guidelines below:
 - Use the lightning:availableForFlowScreens interface to make the component should be available in Flow screens by default.
 
 ## Visualforce Pages
-- Use standard controllers and standard list controllers by default. Only use custom controllers if the request necessitates it.
-- Use standard salesforce components and styling, unless the request necessitates otherwise.
+- Use standard controllers and standard list controllers by default. Only use custom controllers if the request necessitates it and is not possible with standard controllers.
+- Always use standard salesforce html components and styling, unless the request necessitates custom css and components and would not be possible with standard components and styling.
 - Always output the full url (including the default org's base URL) that the Visualforce page can be viewed at after creating the page.
 
 ## Metadata Generation
@@ -57,6 +57,7 @@ Follow the guidelines below:
 - Always prefer existing object and fields for your implementation. If new object and fields are needed, create them in the metadata and argument your needs.
 - Include comments explaining key design decisions. Don't explain the obvious.
 - Create a Lightning Web Component only when requested, otherwise refer to the standard Salesforce UI components
+- Ensure everything is built as simply as possible. Review the code and pull in the latest documentation from context7 mcp to ensure things have been done as simply as they can be.
 
 ## Salesforce DX MCP
 - Always check the Salesforce DX MCP server tools to see if any of them can be useful in achieving each task.

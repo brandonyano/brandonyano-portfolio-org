@@ -28,26 +28,43 @@
                 </div>
             </apex:pageBlockButtons>
             
-            <!-- Conversion Settings Section -->
+            <!-- Conversion Settings Section - Horizontal Layout with Better Alignment -->
             <apex:pageBlockSection title="Conversion Settings" columns="2" 
                                    collapsible="true" showHeader="true">
+                
+                <!-- Create Opportunity Setting -->
                 <apex:pageBlockSectionItem>
-                    <apex:outputLabel value="Create Opportunity:" for="createOpp"/>
-                    <apex:inputCheckbox id="createOpp" value="{!createOpportunity}"/>
+                    <apex:outputPanel layout="block" style="display: flex; align-items: center; gap: 8px;">
+                        <apex:outputLabel value="Create Opportunity:" for="createOpp" styleClass="slds-form-element__label" style="margin: 0; white-space: nowrap;"/>
+                        <apex:inputCheckbox id="createOpp" value="{!createOpportunity}" style="margin: 0;"/>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                
+                <!-- Send Email Setting -->
+                <apex:pageBlockSectionItem>
+                    <apex:outputPanel layout="block" style="display: flex; align-items: center; gap: 8px;">
+                        <apex:outputLabel value="Send Email to Owner:" for="sendEmail" styleClass="slds-form-element__label" style="margin: 0; white-space: nowrap;"/>
+                        <apex:inputCheckbox id="sendEmail" value="{!sendEmailToOwner}" style="margin: 0;"/>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                
+                <!-- Descriptive Information spanning both columns -->
+                <apex:pageBlockSectionItem>
+                    <apex:outputPanel layout="block" styleClass="slds-m-top_small">
+                        <div class="slds-text-body_small slds-text-color_default">
+                            <strong>Note:</strong> Lead conversion will create Account and Contact records based on Lead data. Opportunities will be created if selected above.
+                        </div>
+                    </apex:outputPanel>
                 </apex:pageBlockSectionItem>
                 
                 <apex:pageBlockSectionItem>
-                    <apex:outputLabel value="Send Email to Owner:" for="sendEmail"/>
-                    <apex:inputCheckbox id="sendEmail" value="{!sendEmailToOwner}"/>
+                    <apex:outputPanel layout="block">
+                        <div class="slds-text-body_small slds-text-color_weak">
+                            <em>Only unconverted leads are shown below. Already converted leads are automatically filtered out.</em>
+                        </div>
+                    </apex:outputPanel>
                 </apex:pageBlockSectionItem>
                 
-                <apex:pageBlockSectionItem>
-                    <apex:outputText value="Note: Lead conversion will create Account and Contact records based on Lead data. Opportunities will be created if selected above."/>
-                </apex:pageBlockSectionItem>
-                
-                <apex:pageBlockSectionItem>
-                    <apex:outputText value="Only unconverted leads are shown below. Already converted leads are automatically filtered out." style="font-style: italic; color: #666;"/>
-                </apex:pageBlockSectionItem>
             </apex:pageBlockSection>
             
             <!-- Selection Info -->
