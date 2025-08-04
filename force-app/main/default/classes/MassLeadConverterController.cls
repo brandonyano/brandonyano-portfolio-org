@@ -24,20 +24,16 @@ public with sharing class MassLeadConverterController {
     
     public List<LeadWrapper> leadWrappers { get; set; }
     
-    // Constructor
+    // Simplified Constructor
     public MassLeadConverterController(ApexPages.StandardSetController controller) {
-        this.standardController = controller;
-        
-        // Set up custom query to include Owner field and exclude already converted leads
+        // Set up custom query to exclude converted leads
         String query = 'SELECT Id, FirstName, LastName, Company, Email, Phone, Status, LeadSource, Owner.Name, CreatedDate FROM Lead WHERE IsConverted = false ORDER BY CreatedDate DESC';
         this.standardController = new ApexPages.StandardSetController(Database.getQueryLocator(query));
-        
-        // Set page size to 25 as requested
-        standardController.setPageSize(pageSize);
+        this.standardController.setPageSize(pageSize);
         
         // Initialize default values
-        createOpportunity = true;
-        sendEmailToOwner = false;
+        this.createOpportunity = true;
+        this.sendEmailToOwner = false;
         
         // Initialize wrapper list
         refreshLeadWrappers();
@@ -56,23 +52,10 @@ public with sharing class MassLeadConverterController {
     }
     
     /**
-     * Refresh the entire StandardSetController with updated query results
-     * This updates both the current page data AND the total record count
+     * Simple refresh - just refresh current page wrappers
      */
-    public void refreshStandardController() {
-        // Re-run the query to get updated results (excluding converted leads)
-        List<Lead> updatedLeads = [
-            SELECT Id, FirstName, LastName, Company, Email, Phone, Status, LeadSource, Owner.Name, CreatedDate 
-            FROM Lead 
-            WHERE IsConverted = false 
-            ORDER BY CreatedDate DESC
-        ];
-        
-        // Create a new StandardSetController with the updated results
-        standardController = new ApexPages.StandardSetController(updatedLeads);
-        standardController.setPageSize(pageSize);
-        
-        // Refresh the wrapper list for the current page
+    public void refreshAfterConversion() {
+        // Simple approach: just refresh the wrappers for current page
         refreshLeadWrappers();
     }
     
@@ -183,8 +166,8 @@ public with sharing class MassLeadConverterController {
                 }
             }
             
-            // Refresh the entire controller to show updated lead list and record count
-            refreshStandardController();
+            // Simple refresh after conversion
+            refreshAfterConversion();
             
         } catch (Exception e) {
             ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 
@@ -197,51 +180,24 @@ public with sharing class MassLeadConverterController {
 
     
     /**
-     * Helper method to get the converted status for leads
+     * Simplified helper method to get the converted status for leads
      */
     private String getLeadConvertedStatus() {
-        try {
-            // Query for available lead status values
-            Schema.DescribeFieldResult fieldResult = Lead.Status.getDescribe();
-            List<Schema.PicklistEntry> ple = fieldResult.getPicklistValues();
-            
-            // Look for common converted statuses first
-            List<String> convertedStatuses = new List<String>{'Closed - Converted', 'Converted', 'Qualified'};
-            
-            for (String statusToFind : convertedStatuses) {
-                for (Schema.PicklistEntry entry : ple) {
-                    if (entry.isActive() && entry.getValue().equalsIgnoreCase(statusToFind)) {
-                        return entry.getValue();
-                    }
-                }
-            }
-            
-            // Look for a status containing 'convert'
-            for (Schema.PicklistEntry entry : ple) {
-                if (entry.isActive() && entry.getValue().toLowerCase().contains('convert')) {
+        // Simple approach: try common values, fallback to 'Qualified'
+        List<String> commonStatuses = new List<String>{'Closed - Converted', 'Converted', 'Qualified'};
+        
+        Schema.DescribeFieldResult fieldResult = Lead.Status.getDescribe();
+        List<Schema.PicklistEntry> picklistValues = fieldResult.getPicklistValues();
+        
+        for (String status : commonStatuses) {
+            for (Schema.PicklistEntry entry : picklistValues) {
+                if (entry.isActive() && entry.getValue().equals(status)) {
                     return entry.getValue();
                 }
             }
-            
-            // Fallback to 'Qualified' if no converted status found
-            for (Schema.PicklistEntry entry : ple) {
-                if (entry.isActive() && entry.getValue().toLowerCase().contains('qualif')) {
-                    return entry.getValue();
-                }
-            }
-            
-            // Last fallback to first active status
-            for (Schema.PicklistEntry entry : ple) {
-                if (entry.isActive()) {
-                    return entry.getValue();
-                }
-            }
-        } catch (Exception e) {
-            // Log the error but continue with fallback
         }
         
-        // Ultimate fallback
-        return 'Qualified';
+        return 'Qualified'; // Safe fallback
     }
     
     /**

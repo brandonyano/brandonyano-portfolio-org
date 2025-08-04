@@ -4,120 +4,29 @@
     <apex:slds />
     
     <style>
-        .leadGrid {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .leadGrid th, .leadGrid td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        .leadGrid th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        .conversionSettings {
-            background-color: #f9f9f9;
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .actionButtons {
-            margin: 10px 0;
-        }
-        .pageNavigation {
-            text-align: center;
-            margin: 15px 0;
-            white-space: nowrap !important;
-        }
-        
-        /* Force all pagination buttons to stay on same line */
-        .pageNavigation .btn,
-        .pageNavigation input[type="button"],
-        .pageNavigation .slds-button {
-            display: inline-block !important;
-            margin-right: 8px !important;
-            vertical-align: middle !important;
-            float: none !important;
-        }
-        
-        /* Specific styling for apex:pageBlockButtons */
-        .pbSubsection .pageNavigation .pbButton {
-            display: inline-block !important;
-            margin-right: 8px !important;
-            float: none !important;
-        }
+        /* Minimal CSS - let SLDS handle most styling */
+        .inline-buttons { white-space: nowrap; text-align: center; }
+        .inline-buttons .slds-button { margin-right: 8px; }
     </style>
     
     <apex:form id="massLeadForm">
         <apex:pageMessages />
         
-        <!-- Action Functions for JavaScript Bridge -->
-        <apex:actionFunction name="convertLeadsJS" action="{!convertSelectedLeads}" reRender="mainBlock" 
-                           status="convertingStatus" oncomplete="resetConvertButton();"/>
-        
-        <script>
-        function convertWithConfirmation() {
-            if (confirm('Are you sure you want to convert the selected leads?')) {
-                // Disable button during processing
-                document.getElementById('convertButton').disabled = true;
-                document.getElementById('convertButton').innerHTML = 'Converting...';
-                convertLeadsJS();
-            }
-        }
-        
-        // Re-enable button after processing (called after reRender)
-        function resetConvertButton() {
-            setTimeout(function() {
-                var button = document.getElementById('convertButton');
-                if (button) {
-                    button.disabled = false;
-                    button.innerHTML = 'CONVERT SELECTED LEADS';
-                }
-            }, 100);
-        }
-        </script>
-        
         <!-- Page Header -->
         <apex:pageBlock title="Mass Lead Converter" id="mainBlock">
             
-            <!-- Action Buttons Section - MOVED TO TOP -->
-            <div class="slds-card slds-m-bottom_medium">
-                <div class="slds-card__header">
-                    <h3 class="slds-card__header-title slds-text-heading_small">Lead Actions</h3>
+            <!-- Simple Action Buttons using standard pageBlockButtons -->
+            <apex:pageBlockButtons location="top">
+                <div class="inline-buttons">
+                    <apex:commandButton value="Select All on Page" action="{!selectAll}" 
+                                      reRender="mainBlock" styleClass="slds-button slds-button_neutral"/>
+                    <apex:commandButton value="Deselect All" action="{!deselectAll}" 
+                                      reRender="mainBlock" styleClass="slds-button slds-button_neutral"/>
+                    <apex:commandButton value="Convert Selected Leads" action="{!convertSelectedLeads}" 
+                                      reRender="mainBlock" styleClass="slds-button slds-button_brand"
+                                      onclick="return confirm('Are you sure you want to convert the selected leads?');"/>
                 </div>
-                <div class="slds-card__body slds-card__body_inner">
-                    <div style="text-align: center; padding: 10px; white-space: nowrap;">
-                        <apex:commandButton value="Select All on Page" action="{!selectAll}" 
-                                          reRender="mainBlock" 
-                                          styleClass="slds-button slds-button_neutral"
-                                          style="display: inline-block; margin-right: 8px; vertical-align: top;"/>
-                        <apex:commandButton value="Deselect All" action="{!deselectAll}" 
-                                          reRender="mainBlock"
-                                          styleClass="slds-button slds-button_neutral"
-                                          style="display: inline-block; margin-right: 15px; vertical-align: top;"/>
-                        <button type="button" 
-                                class="slds-button slds-button_brand"
-                                onclick="convertWithConfirmation()" 
-                                id="convertButton"
-                                style="display: inline-block; vertical-align: top;">
-                            CONVERT SELECTED LEADS
-                        </button>
-                        
-                        <!-- Loading Status -->
-                        <apex:actionStatus id="convertingStatus">
-                            <apex:facet name="start">
-                                <div style="margin-top: 15px; color: #0176d3; font-weight: bold;">
-                                    <img src="/img/loading.gif" style="vertical-align: middle; margin-right: 5px;"/>
-                                    Converting leads, please wait...
-                                </div>
-                            </apex:facet>
-                        </apex:actionStatus>
-                    </div>
-                </div>
-            </div>
+            </apex:pageBlockButtons>
             
             <!-- Conversion Settings Section -->
             <apex:pageBlockSection title="Conversion Settings" columns="2" 
@@ -213,15 +122,15 @@
                 </apex:pageBlockTable>
             </apex:pageBlockSection>
             
-            <!-- Pagination Controls -->
+            <!-- Simplified Pagination Controls -->
             <apex:pageBlockButtons location="bottom">
-                <div class="pageNavigation">
+                <div class="inline-buttons">
                     <apex:commandButton value="<< First" action="{!first}" 
                                       disabled="{!NOT(hasPrevious)}" reRender="mainBlock"/>
                     <apex:commandButton value="< Previous" action="{!previous}" 
                                       disabled="{!NOT(hasPrevious)}" reRender="mainBlock"/>
-                    <apex:outputText value=" Page {!pageNumber} of {!totalPages} " 
-                                   style="display: inline-block; margin: 0 15px; vertical-align: middle; line-height: 2rem;"/>
+                    <apex:outputText value="Page {!pageNumber} of {!totalPages}" 
+                                   style="margin: 0 15px; line-height: 2rem;"/>
                     <apex:commandButton value="Next >" action="{!next}" 
                                       disabled="{!NOT(hasNext)}" reRender="mainBlock"/>
                     <apex:commandButton value="Last >>" action="{!last}" 
@@ -231,27 +140,5 @@
             
         </apex:pageBlock>
     </apex:form>
-    
-    <!-- Additional JavaScript for enhanced UX -->
-    <script>
-        // Add any custom JavaScript if needed
-        function confirmBulkConversion(selectedCount) {
-            if (selectedCount === 0) {
-                alert('Please select at least one lead to convert.');
-                return false;
-            }
-            return confirm('Are you sure you want to convert ' + selectedCount + ' lead(s)?');
-        }
-        
-        // Auto-refresh selected count when checkboxes change
-        function updateSelectedCount() {
-            var checkboxes = document.querySelectorAll('input[type="checkbox"]');
-            var count = 0;
-            checkboxes.forEach(function(cb) {
-                if (cb.checked) count++;
-            });
-            // Update display if needed
-        }
-    </script>
     
 </apex:page>
